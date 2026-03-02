@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>My Adapter</title>
+    <style>
+        /* Обнуление и базовые настройки */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        /* Плавный фон, градиент, готовый к скроллу */
+        body {
+            min-height: 100vh;
+            background: linear-gradient(145deg, #0b0d10 0%, #1a1e26 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            opacity: 0; /* Начальное состояние для анимации входа */
+            animation: pageFadeIn 1s ease-in-out forwards;
+        }
+
+        /* Ключевые кадры для входной анимации */
+        @keyframes pageFadeIn {
+            0% {
+                opacity: 0;
+                backdrop-filter: blur(10px);
+                transform: scale(0.98);
+            }
+            100% {
+                opacity: 1;
+                backdrop-filter: blur(0);
+                transform: scale(1);
+            }
+        }
+
+        /* Главный контейнер-адаптер */
+        .adapter {
+            max-width: 600px;
+            width: 100%;
+            margin: 20px auto;
+            background: rgba(22, 26, 32, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 48px 48px 40px 40px;
+            padding: 32px 24px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            transition: transform 0.3s ease, border-radius 0.2s;
+            /* Начальное состояние (для эффекта при листании) будет сдвинуто, но анимация привязана к просмотру */
+            /* Сама анимация "при листании" сработает через intersection observer (реализовано в js) */
+        }
+
+        /* Заголовок и аватар */
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 32px;
+            padding: 0 8px;
+        }
+
+        .avatar {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #2b3c5a, #141b26);
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 38px;
+            font-weight: 500;
+            color: #a0c0ff;
+            box-shadow: 0 8px 18px -4px #00000080, 0 0 0 1px #3f506e inset;
+            text-shadow: 0 2px 5px black;
+        }
+
+        .info h1 {
+            color: white;
+            font-size: 1.9rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            line-height: 1.1;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .info .badge {
+            background: #2b3f5a;
+            color: #bdd4ff;
+            border-radius: 100px;
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+            margin-top: 6px;
+            border: 1px solid #4e6790;
+            box-shadow: 0 2px 6px black;
+            backdrop-filter: blur(4px);
+        }
+
+        /* Описание и примечание */
+        .note {
+            color: #a8b9d9;
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 30px;
+            padding: 16px 22px;
+            margin-bottom: 28px;
+            font-size: 1rem;
+            line-height: 1.4;
+            border: 1px solid #2f3d57;
+            text-align: center;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 10px 20px -10px black;
+        }
+
+        /* Кнопки-ссылки — основной блок */
+        .links-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        /* Стиль кнопки */
+        .button-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 24px;
+            background: rgba(18, 22, 30, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(90, 130, 200, 0.25);
+            border-radius: 200px;
+            color: white;
+            text-decoration: none;
+            font-size: 1.2rem;
+            font-weight: 530;
+            letter-spacing: 0.2px;
+            box-shadow: 0 8px 0 #0b0f14, 0 12px 25px -8px #000000dd;
+            transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+            border-bottom: 2px solid #36577b;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Псевдоэлемент для дополнительной анимации при наведении/клике */
+        .button-link::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            transform: translate(-50%, -50%);
+            transition: width 0.4s ease, height 0.4s ease;
+            z-index: 0;
+        }
+
+        .button-link:hover::after {
+            width: 300px;
+            height: 300px;
+        }
+
+        .button-link:hover {
+            transform: scale(1.01) translateY(-2px);
+            border-color: #5b8ad0;
+            background: #1f2838e0;
+            box-shadow: 0 10px 0 #0a0e12, 0 18px 30px -6px black;
+        }
+
+        .button-link:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #0b0f14, 0 12px 20px -8px black;
+            transition: 0.05s;
+        }
+
+        /* Иконка стрелки или эмодзи */
+        .button-link span {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            border: 1px solid #4f6791;
+            box-shadow: 0 2px 8px black;
+            transition: 0.2s;
+            z-index: 2;
+            position: relative;
+        }
+
+        .button-link:hover span {
+            background: #2f4468;
+            transform: rotate(2deg) scale(1.05);
+            border-color: #90aee0;
+        }
+
+        /* Исключение для последних двух кнопок (докс/угрозы) */
+        .button-link.special {
+            background: rgba(40, 30, 40, 0.8);
+            border-color: #a03a4e;
+            border-bottom-color: #6f2635;
+        }
+
+        .button-link.special span {
+            border-color: #b4566a;
+        }
+
+        /* Адаптация под мобильные (уже почти всё гибкое, но докрутим) */
+        @media (max-width: 480px) {
+            .adapter {
+                border-radius: 32px 32px 28px 28px;
+                padding: 24px 16px;
+            }
+
+            .profile {
+                gap: 12px;
+            }
+
+            .avatar {
+                width: 60px;
+                height: 60px;
+                font-size: 32px;
+                border-radius: 22px;
+            }
+
+            .info h1 {
+                font-size: 1.6rem;
+            }
+
+            .button-link {
+                padding: 15px 18px;
+                font-size: 1.1rem;
+            }
+
+            .button-link span {
+                width: 34px;
+                height: 34px;
+                font-size: 1.3rem;
+            }
+
+            .note {
+                padding: 14px 16px;
+                font-size: 0.95rem;
+            }
+        }
+
+        /* Анимация появления при скролле (листании) — будет добавлен класс .in-view */
+        .adapter {
+            transition: opacity 0.6s cubic-bezier(0.23, 1, 0.32, 1), transform 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+            opacity: 0;
+            transform: translateY(40px) scale(0.98);
+        }
+
+        .adapter.in-view {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        /* Делаем красивый скроллбар */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #11161f;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #344b6b;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="adapter" id="mainAdapter">
+        <!-- Верхняя часть: лого/НИК ТЕПЕРЬ My Adapter -->
+        <div class="profile">
+            <div class="avatar">📱</div>
+            <div class="info">
+                <h1>My Adapter</h1>   <!-- ИЗМЕНЕНО: вместо pskvida -->
+                <span class="badge">адаптер / связь</span>
+            </div>
+        </div>
+
+        <!-- Блок с подсказкой / настроением -->
+        <div class="note">
+            ⚡ нажимай — перейдешь сразу в нужный чат<br> 
+            (если спамблок, используй бота)
+        </div>
+
+        <!-- СЕТЬ КНОПОК-ССЫЛОК (Telegram) -->
+        <div class="links-grid">
+            <!-- Мой Telegram -->
+            <a href="https://t.me/user_sber" class="button-link" target="_blank" rel="noopener noreferrer">
+                <span>📩</span> Мой Telegram
+                <span>↗️</span>
+            </a>
+            <!-- Мой канал -->
+            <a href="https://t.me/pskvida" class="button-link" target="_blank" rel="noopener noreferrer">
+                <span>📢</span> Мой канал
+                <span>↗️</span>
+            </a>
+            <!-- Мои отзывы -->
+            <a href="https://t.me/user_reps" class="button-link" target="_blank" rel="noopener noreferrer">
+                <span>⭐</span> Мои отзывы
+                <span>↗️</span>
+            </a>
+            <!-- Мой бот (спамблок) -->
+            <a href="https://t.me/svyaz_qwertybot" class="button-link" target="_blank" rel="noopener noreferrer">
+                <span>🤖</span> Мой бот (спамблок)
+                <span>↗️</span>
+            </a>
+            <!-- Менеджер -->
+            <a href="https://t.me/megafonseo" class="button-link" target="_blank" rel="noopener noreferrer">
+                <span>👤</span> Менеджер
+                <span>↗️</span>
+            </a>
+            <!-- Докс/Угрозы - Чс (специальная) -->
+            <a href="#" class="button-link special" target="_blank" rel="noopener noreferrer" onclick="alert('⚡ Докс/Угрозы? Ты по адресу, но тут Чс. Для связи используй бота или менеджера.'); return false;">
+                <span>⚠️</span> Докс/Угрозы — Чс
+                <span>⛔</span>
+            </a>
+        </div>
+
+        <!-- НИЖНЯЯ ЧАСТЬ ПОЛНОСТЬЮ УДАЛЕНА 🔐 @pskvida больше нет -->
+        <!-- Добавлен минимальный пустой разделитель, чтобы сохранить эстетику, но без лишней информации -->
+        <div style="height: 4px;"></div>
+    </div>
+
+    <script>
+        (function() {
+            // Анимация при листании (intersection observer)
+            const adapter = document.getElementById('mainAdapter');
+
+            if ('IntersectionObserver' in window) {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('in-view');
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, {
+                    threshold: 0.3,
+                    rootMargin: '20px'
+                });
+
+                observer.observe(adapter);
+            } else {
+                // fallback для старых браузеров
+                adapter.classList.add('in-view');
+            }
+
+            window.addEventListener('load', function() {
+                if (!adapter.classList.contains('in-view')) {
+                    const rect = adapter.getBoundingClientRect();
+                    const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+                    if (rect.top < windowHeight - 50 && rect.bottom > 50) {
+                        adapter.classList.add('in-view');
+                    }
+                }
+            });
+
+            setTimeout(() => {
+                if (!adapter.classList.contains('in-view')) {
+                    const rect = adapter.getBoundingClientRect();
+                    const winHeight = window.innerHeight;
+                    if (rect.top < winHeight - 20 && rect.bottom > 20) {
+                        adapter.classList.add('in-view');
+                    }
+                }
+            }, 300);
+        })();
+    </script>
+</body>
+</html>
